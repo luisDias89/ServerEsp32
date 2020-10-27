@@ -1,0 +1,51 @@
+#include <Arduino.h>      //Biblioteca do arduino
+
+#include <WiFi.h>         // Biblioteca Wi-Fi
+
+// Conecção à Rede de Casa, Inserir o username e Password Correto
+const char* ssid = "MEO-580965";
+const char* password = "986B27FF9F";
+const char* host="192.168.1.66";
+
+void setup() {
+Serial.begin(9600);
+WiFi.mode(WIFI_STA);
+WiFi.begin(ssid, password);
+while (WiFi.status() != WL_CONNECTED) {
+ delay(500);
+ Serial.print(".");
+ } // while
+Serial.println(WiFi.localIP());
+ } // setup
+
+ int value = 0;
+void loop() {
+ delay(1000);
+ ++value;
+ Serial.print("connecting to ");
+ Serial.println(host);
+ // Use WiFiClient class to create TCP connections
+ WiFiClient client;
+ const int httpPort = 80;
+ if (!client.connect(host, httpPort)) {
+ Serial.println("connection failed");
+ return;
+ }
+ // Pedido HTTP
+ String HTTP_req = "GET /ola.html HTTP/1.1\r\nHost:192.168.1.2 \r\nConection: Close\r\n\r\n";
+ client.print(HTTP_req);
+ Serial.println("Envio de msg para o Apache: ");
+ Serial.println(HTTP_req);
+ unsigned long timeout = millis();
+ while (client.available() == 0) {
+ if (millis() - timeout > 10000) {
+ Serial.println(">>> Client Timeout !");
+ client.stop(); return;
+ } // if
+ } // while
+ // Read all the lines of the reply from server and print them to Serial
+ while(client.available()){
+ String line = client.readStringUntil('\r');
+ Serial.println(line);
+ } // while
+ } // Loop
